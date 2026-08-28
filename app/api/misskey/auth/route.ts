@@ -1,8 +1,15 @@
 import { NextResponse } from "next/server";
 
+const MISSKEY_HOST = "https://wa-community.net";
+
 export async function GET() {
   const sessionId = crypto.randomUUID();
-  const callback = `${process.env.NEXT_PUBLIC_APP_URL || "https://aeru-cleaner-three.vercel.app"}/api/misskey/callback`;
+
+  const appUrl =
+    process.env.NEXT_PUBLIC_APP_URL ||
+    "https://aeru-cleaner-three.vercel.app";
+
+  const callback = `${appUrl}/api/misskey/callback`;
 
   const params = new URLSearchParams({
     name: "AERU Cleaner",
@@ -10,8 +17,18 @@ export async function GET() {
     callback,
   });
 
-  return NextResponse.json({
+  const response = NextResponse.json({
     sessionId,
-    url: `https://wa-community.net/miauth/${sessionId}?${params.toString()}`,
+    url: `${MISSKEY_HOST}/miauth/${sessionId}?${params.toString()}`,
   });
+
+  response.cookies.set("aeru_miauth_session", sessionId, {
+    httpOnly: true,
+    secure: true,
+    sameSite: "lax",
+    path: "/",
+    maxAge: 600,
+  });
+
+  return response;
 }
